@@ -27,6 +27,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.net.Uri;
 import android.telephony.TelephonyManager;
 import android.view.KeyEvent;
 
@@ -42,6 +43,7 @@ class CoreAndroid extends CordovaPlugin {
     private BroadcastReceiver telephonyReceiver;
     private CallbackContext messageChannel;
     private PluginResult pendingResume;
+    private String appScope;
     private final Object messageChannelLock = new Object();
 
     /**
@@ -59,6 +61,8 @@ class CoreAndroid extends CordovaPlugin {
      */
     @Override
     public void pluginInitialize() {
+        this.appScope = preferences.getString("scope", null);
+
         this.initTelephonyReceiver();
     }
 
@@ -126,6 +130,34 @@ class CoreAndroid extends CordovaPlugin {
             callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.JSON_EXCEPTION));
             return false;
         }
+    }
+
+    @Override
+    public Uri remapUri(Uri uri) {
+        if (!uri.toString().startsWith(this.appScope)) {
+            return null;
+        }
+
+        String remapped = uri.toString().replace(this.appScope, "file:///android_asset/www/");
+        return Uri.parse(remapped);
+    }
+
+    @Override
+    public Boolean shouldAllowRequest(String url) {
+        if (url.startsWith(this.appScope)) {
+            return true;
+        }
+
+        return null;
+    }
+
+    @Override
+    public Boolean shouldAllowNavigation(String url) {
+        if (url.startsWith(this.appScope)) {
+            return true;
+        }
+
+        return null;
     }
 
     //--------------------------------------------------------------------------
