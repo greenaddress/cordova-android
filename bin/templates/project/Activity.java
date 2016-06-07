@@ -19,6 +19,8 @@
 
 package __ID__;
 
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import org.apache.cordova.*;
 
@@ -28,7 +30,45 @@ public class __ACTIVITY__ extends CordovaActivity
     public void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
-        // Set by <content src="index.html" /> in config.xml
-        loadUrl(launchUrl);
+
+        if (!handleIntent(getIntent())) {
+            // Set by <content src="index.html" /> in config.xml
+            loadUrl(launchUrl);
+        }
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+
+        handleIntent(intent);
+    }
+
+
+    private Boolean handleIntent(Intent intent) {
+        String scope = preferences.getString("scope", null);
+        if (scope == null) {
+            return false;
+        }
+
+        if (intent == null || !intent.getAction().equals(Intent.ACTION_VIEW)) {
+            return false;
+        }
+
+        final Uri intentUri = intent.getData();
+
+        // com.example.myapp://foo/bar => index.html#foo/bar
+        if (intentUri.getScheme().equals(this.getPackageName())) {
+            String url = launchUrl.split("#")[0];
+            loadUrl(url + "#" + intentUri.toString().split("//")[1]);
+            return true;
+        }
+
+        if (intentUri.toString().startsWith(scope)) {
+            loadUrl(intentUri.toString());
+            return true;
+        }
+
+        return false;
     }
 }

@@ -276,6 +276,9 @@ exports.create = function(project_path, config, options, events) {
                 .setTargetSdkVersion(target_api.split('-')[1])
                 .getActivity().setName(safe_activity_name);
 
+            var intentData = manifest.doc.getroot().find('./application/activity/intent-filter/data');
+            intentData.attrib['android:scheme'] = package_name;
+
             var manifest_path = path.join(project_path, 'AndroidManifest.xml');
             manifest.write(manifest_path);
 
